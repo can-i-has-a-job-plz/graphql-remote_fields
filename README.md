@@ -17,6 +17,41 @@ And then execute:
 
 ## Usage
 
+```ruby
+  module Types
+    module Types
+      class AuthorType < GraphQL::Schema::Object
+        field :id, ID, null: false
+        field :name, String, null: false
+      end
+
+      class BookType < GraphQL::Schema::Object
+        field :id, ID, null: false
+        field :name, String, null: false
+      end
+
+      class CitationType < GraphQL::Schema::Object
+        field :id, ID, null: false
+        field :content, String, null: false
+      end
+    end
+
+    class Query < GraphQL::Schema::Object
+      # Enable plugin
+      include GraphQL::RemoteFields
+
+      # Set default remote_resolved, can be omitted
+      remote_resolver StubResolver
+
+      field :authors, [Types::AuthorType], null: false
+    end
+  end
+end
+
+class Schema < GraphQL::Schema
+  query GraphqlApi::Types::Query
+end
+```
 
 ## Development
 
