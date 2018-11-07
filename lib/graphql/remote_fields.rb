@@ -34,7 +34,27 @@ module GraphQL
         raise 'remote_resolver is not set'
       end
 
+      @remote = remote
+
       super(*args, **kwargs, &block)
+    end
+
+    def resolve_field(obj, _args, ctx)
+      return super unless @remote
+
+      obj.class.remote_resolver_obj.resolve_remote_field(
+        remote_query(ctx).to_query_string.strip,
+        ctx
+      )
+    end
+
+    private
+
+    def remote_query(ctx)
+      Language::Nodes::OperationDefinition.new(
+        name: 'query',
+        selections: [ctx.ast_node]
+      )
     end
   end
 end

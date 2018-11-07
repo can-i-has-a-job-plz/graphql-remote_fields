@@ -104,6 +104,56 @@ RSpec.describe GraphQL::RemoteFields do
       end
 
       it { expect { query }.not_to raise_error }
+
+      context 'query execution' do
+        let(:query_string) do
+          <<~QUERY
+            {
+              authors {
+                id,
+                name
+              },
+              books {
+                id,
+                name
+              }
+            }
+          QUERY
+        end
+        let(:expected_remote_query) do
+          <<~QUERY.strip
+            query {
+              books {
+                id
+                name
+              }
+            }
+          QUERY
+        end
+        let(:expected) do
+          {
+            'data' => include(
+              'authors' => match_array(GraphqlApi::AUTHORS),
+              'books' => match_array(GraphqlApi::BOOKS)
+            )
+          }
+        end
+
+        before do
+          expect(GraphqlApi::StubResolver)
+            .to receive(:resolve_remote_field)
+            .with(
+              expected_remote_query,
+              instance_of(GraphQL::Query::Context::FieldResolutionContext)
+            )
+            .once
+            .and_call_original
+        end
+
+        it 'should return expected authors and books' do
+          expect(Schema.execute(query_string).to_h).to match(expected)
+        end
+      end
     end
 
     context 'when remote_resolver is not set' do

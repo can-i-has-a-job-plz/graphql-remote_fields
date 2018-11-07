@@ -44,6 +44,8 @@ And then execute:
       remote_resolver StubResolver
 
       field :authors, [Types::AuthorType], null: false
+      # Use default remote resolving for fetching books
+      field :books, [Types::BookType], null: false, remote: true
     end
   end
 end
