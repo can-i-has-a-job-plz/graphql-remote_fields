@@ -39,20 +39,19 @@ module GraphQL
       klass.extend ClassMethods
     end
 
-    def initialize(*args, remote: nil, **kwargs, &block)
-      if remote && !kwargs.fetch(:owner).remote_resolver_obj
-        raise 'remote_resolver is not set'
-      end
+    def initialize(*args, remote: nil, remote_resolver: nil, **kwargs, &block)
+      @remote_resolver = remote_resolver
+      @remote_resolver ||= (remote && kwargs.fetch(:owner).remote_resolver_obj)
 
-      @remote = remote
+      raise 'remote_resolver is not set' if remote && @remote_resolver.nil?
 
       super(*args, **kwargs, &block)
     end
 
     def resolve_field(obj, args, ctx)
-      return super unless @remote
+      return super unless @remote_resolver
 
-      obj.class.remote_resolver_obj.resolve_remote_field(
+      @remote_resolver.resolve_remote_field(
         remote_query(ctx).to_query_string(
           printer: VariableExpander.new(args)
         ).strip,

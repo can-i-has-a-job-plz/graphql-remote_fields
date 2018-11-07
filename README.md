@@ -46,6 +46,10 @@ And then execute:
       field :authors, [Types::AuthorType], null: false
       # Use default remote resolving for fetching books
       field :books, [Types::BookType], null: false, remote: true
+      # Use custom remote_resolver for citations. `remote: true` can be omitted
+      # if `remote_resolver` is set
+      field :citations, [Types::CitationType],
+            null: false, remote_resolver: StubCitationsResolver
     end
   end
 end

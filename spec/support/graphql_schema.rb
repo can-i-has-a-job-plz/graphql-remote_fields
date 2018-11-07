@@ -10,6 +10,10 @@ module GraphqlApi
   BOOKS = [{ 'id' => '1', 'name' => 'Generation "П"' },
            { 'id' => '2', 'name' => 'Blue Salo' }].freeze
 
+  CITATIONS = [{ 'id' => '1',
+                 'content' => 'Агитпроп бессмертен. Меняются только слова.' },
+               { 'id' => '2', 'content' => 'Ясауууух пашооооо!!!' }].freeze
+
   class StubResolver
     def self.resolve_remote_field(_query, context)
       case context.ast_node.name
@@ -17,6 +21,12 @@ module GraphqlApi
       when 'book' then BOOKS[1]
       else raise
       end
+    end
+  end
+
+  class StubCitationsResolver
+    def self.resolve_remote_field(_query, _context)
+      CITATIONS
     end
   end
 
@@ -31,6 +41,11 @@ module GraphqlApi
         field :id, ID, null: false
         field :name, String, null: false
       end
+
+      class CitationType < GraphQL::Schema::Object
+        field :id, ID, null: false
+        field :content, String, null: false
+      end
     end
 
     class Query < GraphQL::Schema::Object
@@ -43,6 +58,8 @@ module GraphqlApi
       field :book, Types::BookType, null: false, remote: true do
         argument :id, ID, required: true
       end
+      field :citations, [Types::CitationType],
+            null: false, remote_resolver: StubCitationsResolver
 
       def authors
         AUTHORS

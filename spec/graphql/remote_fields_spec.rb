@@ -101,7 +101,7 @@ RSpec.describe GraphQL::RemoteFields do
       end
     end
 
-    context 'when remote_resolver is set' do
+    context 'when remote_resolver is set globally' do
       before do
         def resolver.resolve_remote_field(query, ctx); end
         base_type.remote_resolver resolver
@@ -179,6 +179,71 @@ RSpec.describe GraphQL::RemoteFields do
         end
 
         it 'should return expected authors and books' do
+          expect(execute_query.call).to match(expected)
+        end
+      end
+    end
+
+    context 'when remote_resolver is set locally' do
+      let(:query) do
+        resolver = resolver
+        Class.new(base_type) do
+          field :id, GraphQL::Schema::Object::ID, null: false,
+                                                  remote_resolver: resolver
+        end
+      end
+      before do
+        def resolver.resolve_remote_field(query, ctx); end
+      end
+
+      it { expect { query }.not_to raise_error }
+
+      context 'query execution' do
+        let(:query_string) do
+          <<~QUERY
+            query {
+              authors {
+                id,
+                name
+              },
+              citations {
+                id,
+                content
+              }
+            }
+          QUERY
+        end
+        let(:expected_citations_query) do
+          <<~QUERY.strip
+            query {
+              citations {
+                id
+                content
+              }
+            }
+          QUERY
+        end
+        let(:expected) do
+          {
+            'data' => include(
+              'authors' => match_array(GraphqlApi::AUTHORS),
+              'citations' => match_array(GraphqlApi::CITATIONS)
+            )
+          }
+        end
+
+        before do
+          expect(GraphqlApi::StubCitationsResolver)
+            .to receive(:resolve_remote_field)
+            .with(
+              expected_citations_query,
+              instance_of(GraphQL::Query::Context::FieldResolutionContext)
+            )
+            .once
+            .and_call_original
+        end
+
+        it 'should return expected authors and citations' do
           expect(execute_query.call).to match(expected)
         end
       end
