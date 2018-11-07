@@ -1,4 +1,6 @@
-require "graphql/remote_fields/version"
+# frozen_string_literal: true
+
+require 'graphql/remote_fields/version'
 
 module GraphQL
   module RemoteFields
