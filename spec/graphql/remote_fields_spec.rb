@@ -7,6 +7,10 @@ RSpec.describe GraphQL::RemoteFields do
     end
   end
   let(:resolver) { Object.new }
+  let(:variables) { {} }
+  let(:execute_query) do
+    -> { Schema.execute(query_string, variables: variables).to_h }
+  end
 
   it 'has a version number' do
     expect(GraphQL::RemoteFields::VERSION).not_to be nil
@@ -86,7 +90,7 @@ RSpec.describe GraphQL::RemoteFields do
     end
 
     it 'should return expected authors' do
-      expect(Schema.execute(query_string).to_h).to match(expected)
+      expect(execute_query.call).to match(expected)
     end
   end
 
@@ -106,9 +110,10 @@ RSpec.describe GraphQL::RemoteFields do
       it { expect { query }.not_to raise_error }
 
       context 'query execution' do
+        let(:variables) { { 'bookId' => 2 } }
         let(:query_string) do
           <<~QUERY
-            {
+            query getBook($bookId: ID!){
               authors {
                 id,
                 name
@@ -116,14 +121,28 @@ RSpec.describe GraphQL::RemoteFields do
               books {
                 id,
                 name
+              },
+              book(id: $bookId) {
+                id,
+                name
               }
             }
           QUERY
         end
-        let(:expected_remote_query) do
+        let(:expected_books_query) do
           <<~QUERY.strip
             query {
               books {
+                id
+                name
+              }
+            }
+          QUERY
+        end
+        let(:expected_book_query) do
+          <<~QUERY.strip
+            query {
+              book(id: 2) {
                 id
                 name
               }
@@ -134,7 +153,8 @@ RSpec.describe GraphQL::RemoteFields do
           {
             'data' => include(
               'authors' => match_array(GraphqlApi::AUTHORS),
-              'books' => match_array(GraphqlApi::BOOKS)
+              'books' => match_array(GraphqlApi::BOOKS),
+              'book' => GraphqlApi::BOOKS[1]
             )
           }
         end
@@ -143,7 +163,15 @@ RSpec.describe GraphQL::RemoteFields do
           expect(GraphqlApi::StubResolver)
             .to receive(:resolve_remote_field)
             .with(
-              expected_remote_query,
+              expected_books_query,
+              instance_of(GraphQL::Query::Context::FieldResolutionContext)
+            )
+            .once
+            .and_call_original
+          expect(GraphqlApi::StubResolver)
+            .to receive(:resolve_remote_field)
+            .with(
+              expected_book_query,
               instance_of(GraphQL::Query::Context::FieldResolutionContext)
             )
             .once
@@ -151,7 +179,7 @@ RSpec.describe GraphQL::RemoteFields do
         end
 
         it 'should return expected authors and books' do
-          expect(Schema.execute(query_string).to_h).to match(expected)
+          expect(execute_query.call).to match(expected)
         end
       end
     end

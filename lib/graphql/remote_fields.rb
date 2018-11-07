@@ -24,6 +24,16 @@ module GraphQL
       end
     end
 
+    class VariableExpander < GraphQL::Language::Printer # :nodoc:
+      def initialize(args)
+        @args = args
+      end
+
+      def print_argument(arg)
+        "#{arg.name}: #{@args[arg.name]}"
+      end
+    end
+
     def self.included(klass)
       klass.field_class.prepend(self)
       klass.extend ClassMethods
@@ -39,11 +49,13 @@ module GraphQL
       super(*args, **kwargs, &block)
     end
 
-    def resolve_field(obj, _args, ctx)
+    def resolve_field(obj, args, ctx)
       return super unless @remote
 
       obj.class.remote_resolver_obj.resolve_remote_field(
-        remote_query(ctx).to_query_string.strip,
+        remote_query(ctx).to_query_string(
+          printer: VariableExpander.new(args)
+        ).strip,
         ctx
       )
     end

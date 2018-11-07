@@ -11,8 +11,12 @@ module GraphqlApi
            { 'id' => '2', 'name' => 'Blue Salo' }].freeze
 
   class StubResolver
-    def self.resolve_remote_field(_query, _context)
-      BOOKS
+    def self.resolve_remote_field(_query, context)
+      case context.ast_node.name
+      when 'books' then BOOKS
+      when 'book' then BOOKS[1]
+      else raise
+      end
     end
   end
 
@@ -36,6 +40,9 @@ module GraphqlApi
 
       field :authors, [Types::AuthorType], null: false
       field :books, [Types::BookType], null: false, remote: true
+      field :book, Types::BookType, null: false, remote: true do
+        argument :id, ID, required: true
+      end
 
       def authors
         AUTHORS
