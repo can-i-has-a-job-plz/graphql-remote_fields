@@ -50,6 +50,16 @@ And then execute:
       # if `remote_resolver` is set
       field :citations, [Types::CitationType],
             null: false, remote_resolver: StubCitationsResolver
+      # Use different type for query to remote resolver, actual query will look like:
+      # query {
+      #  otherType {
+      #     id
+      #     content
+      #   }
+      # }
+      field :citation, Types::CitationType,
+            null: false, remote_type: 'otherType'
+
     end
   end
 end

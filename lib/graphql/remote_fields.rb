@@ -39,14 +39,19 @@ module GraphQL
       klass.extend ClassMethods
     end
 
-    def initialize(*args, remote: nil, remote_resolver: nil, **kwargs, &block)
+    # rubocop:disable Metrics/ParameterLists
+    def initialize(*args, remote: nil, remote_resolver: nil, remote_type: nil,
+                   **kwargs, &block)
       @remote_resolver = remote_resolver
       @remote_resolver ||= (remote && kwargs.fetch(:owner).remote_resolver_obj)
 
       raise 'remote_resolver is not set' if remote && @remote_resolver.nil?
 
+      @remote_type = remote_type
+
       super(*args, **kwargs, &block)
     end
+    # rubocop:enable Metrics/ParameterLists
 
     def resolve_field(obj, args, ctx)
       return super unless @remote_resolver
@@ -62,9 +67,11 @@ module GraphQL
     private
 
     def remote_query(ctx)
+      selection = ctx.ast_node
+      selection.name = @remote_type if @remote_type
       Language::Nodes::OperationDefinition.new(
         name: 'query',
-        selections: [ctx.ast_node]
+        selections: [selection]
       )
     end
   end

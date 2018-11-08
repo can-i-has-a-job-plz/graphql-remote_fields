@@ -209,6 +209,10 @@ RSpec.describe GraphQL::RemoteFields do
               citations {
                 id,
                 content
+              },
+              citation {
+                id,
+                content
               }
             }
           QUERY
@@ -223,11 +227,22 @@ RSpec.describe GraphQL::RemoteFields do
             }
           QUERY
         end
+        let(:expected_citation_query) do
+          <<~QUERY.strip
+            query {
+              otherType {
+                id
+                content
+              }
+            }
+          QUERY
+        end
         let(:expected) do
           {
             'data' => include(
               'authors' => match_array(GraphqlApi::AUTHORS),
-              'citations' => match_array(GraphqlApi::CITATIONS)
+              'citations' => match_array(GraphqlApi::CITATIONS),
+              'citation' => GraphqlApi::CITATIONS.first
             )
           }
         end
@@ -237,6 +252,14 @@ RSpec.describe GraphQL::RemoteFields do
             .to receive(:resolve_remote_field)
             .with(
               expected_citations_query,
+              instance_of(GraphQL::Query::Context::FieldResolutionContext)
+            )
+            .once
+            .and_call_original
+          expect(GraphqlApi::StubCitationsResolver)
+            .to receive(:resolve_remote_field)
+            .with(
+              expected_citation_query,
               instance_of(GraphQL::Query::Context::FieldResolutionContext)
             )
             .once

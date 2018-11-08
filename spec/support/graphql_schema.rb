@@ -25,8 +25,12 @@ module GraphqlApi
   end
 
   class StubCitationsResolver
-    def self.resolve_remote_field(_query, _context)
-      CITATIONS
+    def self.resolve_remote_field(_query, context)
+      case context.ast_node.name
+      when 'citations' then CITATIONS
+      when 'otherType' then CITATIONS.first
+      else raise
+      end
     end
   end
 
@@ -60,6 +64,9 @@ module GraphqlApi
       end
       field :citations, [Types::CitationType],
             null: false, remote_resolver: StubCitationsResolver
+      field :citation, Types::CitationType,
+            null: false, remote_resolver: StubCitationsResolver,
+            remote_type: 'otherType'
 
       def authors
         AUTHORS
