@@ -232,7 +232,7 @@ RSpec.describe GraphQL::RemoteFields do
             query {
               otherType {
                 id
-                content
+                text
               }
             }
           QUERY

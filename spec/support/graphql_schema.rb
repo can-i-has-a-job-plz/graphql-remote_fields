@@ -14,6 +14,10 @@ module GraphqlApi
                  'content' => 'Агитпроп бессмертен. Меняются только слова.' },
                { 'id' => '2', 'content' => 'Ясауууух пашооооо!!!' }].freeze
 
+  NEW_CITATIONS = [{ 'id' => '1',
+                     'text' => 'Агитпроп бессмертен. Меняются только слова.' },
+                   { 'id' => '2', 'text' => 'Ясауууух пашооооо!!!' }].freeze
+
   class StubResolver
     def self.resolve_remote_field(_query, context)
       case context.ast_node.name
@@ -28,7 +32,7 @@ module GraphqlApi
     def self.resolve_remote_field(_query, context)
       case context.ast_node.name
       when 'citations' then CITATIONS
-      when 'otherType' then CITATIONS.first
+      when 'otherType' then NEW_CITATIONS.first
       else raise
       end
     end
@@ -66,7 +70,8 @@ module GraphqlApi
             null: false, remote_resolver: StubCitationsResolver
       field :citation, Types::CitationType,
             null: false, remote_resolver: StubCitationsResolver,
-            remote_type: 'otherType'
+            remote_type: 'otherType',
+            remote_fieldmap: { 'content' => 'text' }.freeze
 
       def authors
         AUTHORS

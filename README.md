@@ -50,15 +50,17 @@ And then execute:
       # if `remote_resolver` is set
       field :citations, [Types::CitationType],
             null: false, remote_resolver: StubCitationsResolver
-      # Use different type for query to remote resolver, actual query will look like:
+      # Use different type and change `content` field to `text` for query to remote resolver,
+      # actual query will look like:
       # query {
       #  otherType {
       #     id
-      #     content
+      #     text
       #   }
       # }
       field :citation, Types::CitationType,
-            null: false, remote_type: 'otherType'
+            null: false, remote_type: 'otherType',
+            remote_fieldmap: { 'content' => 'text' }.freeze
 
     end
   end
