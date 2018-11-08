@@ -2,6 +2,11 @@
 
 Plugin for [graphql-ruby](https://github.com/rmosolgo/graphql-ruby) which adds support for [schema stiching](https://www.prisma.io/blog/how-do-graphql-remote-schemas-work-7118237c89d7/)
 
+## Requirements
+
+- Ruby >= 2.5.0
+- `graphql-ruby` ~> 1.8 || ~> 1.7
+
 
 ## Installation
 
