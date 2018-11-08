@@ -1,4 +1,4 @@
-/.bundle/
+.bundle/
 /.yardoc
 /_yardoc/
 /coverage/
@@ -9,3 +9,5 @@
 
 # rspec failure tracking
 .rspec_status
+
+*.lock
